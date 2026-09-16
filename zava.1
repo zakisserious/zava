@@ -1,0 +1,152 @@
+.TH ZAVA 1 "2026" "zava 0.1.0" "User Commands"
+.SH NAME
+zava \- console-based audio visualizer
+.SH SYNOPSIS
+.B zava
+.RI [ options ]
+.SH DESCRIPTION
+.B zava
+is a console audio visualizer: it captures PCM audio from an input device,
+runs it through a dual-buffer FFT, and draws a spectrum as sub-character
+Unicode blocks in the terminal.
+.PP
+It is a from-scratch Rust reimplementation of CAVA
+.RI ( https://github.com/karlstav/cava )
+with the same DSP pipeline, configuration semantics and rendering behaviour,
+plus an interactive settings menu.
+.SH OPTIONS
+.TP
+.BR \-p ", " \-\-config " \fIPATH\fR"
+Read configuration from
+.IR PATH .
+.TP
+.B \-\-test
+Use a synthetic in-process test signal instead of real audio. Useful for
+checking layout and colours without playing anything.
+.TP
+.BI \-\-method " METHOD"
+Override the audio input method. One of
+.IR pipewire ", " pulse ", " alsa ", " fifo ", " cpal ", " test .
+.TP
+.BI \-\-source " SOURCE"
+Override the input device; for
+.B fifo
+this is the path of the named pipe.
+.TP
+.BI \-\-output " METHOD"
+Override the output method. One of
+.IR noncurses ", " ncurses ", " raw .
+.TP
+.BI \-\-channels " MODE"
+Override the output channel layout:
+.B stereo
+or
+.BR mono .
+.TP
+.B \-\-generate\-config
+Write a configuration file to the standard location (or to
+.BR \-p \fIPATH\fR
+if given) and exit. Existing values are preserved; missing keys are appended.
+.TP
+.BR \-v ", " \-\-version
+Print the version and exit.
+.TP
+.BR \-h ", " \-\-help
+Print a short help summary and exit.
+.SH CONTROLS
+.TP
+.B Up / Down
+Increase / decrease sensitivity by 15%.
+.TP
+.B Left / Right
+Fewer / more bars. In auto mode
+.RB ( bars " = 0)"
+this widens / narrows each bar; with a fixed
+.B bars
+it changes the count. Both stop at the limit that fits the terminal unless
+.B wrap_bars
+is enabled.
+.TP
+.B m
+Open the interactive settings menu. Navigate with
+.BR Up / Down ,
+adjust the highlighted row with
+.BR Left / Right
+and leave with
+.BR m ", " q " or " Esc .
+.TP
+.B o
+Cycle the orientation live:
+.IR bottom ", " top ", " left ", " right ", " horizontal .
+.TP
+.B r
+Reload the configuration file.
+.TP
+.B c
+Reload colours only.
+.TP
+.B f / b
+Cycle the foreground / background colour.
+.TP
+.B q
+Quit.
+.SH FILES
+.TP
+.I $XDG_CONFIG_HOME/zava/config
+.TQ
+.I ~/.config/zava/config
+Configuration file.
+.B zava
+is config-isolated: it never reads or writes
+.IR ~/.config/cava/config .
+If a legacy CAVA config exists a warning is printed and it is ignored.
+.TP
+.I /usr/share/zava/config.example
+Fully commented reference configuration installed by the package.
+.SH ORIENTATIONS
+.TP
+.B bottom
+Bars grow up from the bottom edge.
+.TP
+.B top
+Bars grow down from the top edge.
+.TP
+.B left
+Bars grow right, from the left edge.
+.TP
+.B right
+Bars grow left, from the right edge.
+.TP
+.B horizontal
+Classic bottom-up bars with the block always centred on the horizontal axis.
+.SH EXAMPLES
+Run with the default monitor:
+.PP
+.RS 4
+zava
+.RE
+.PP
+Check the rendering with a synthetic signal:
+.PP
+.RS 4
+zava \-\-test
+.RE
+.PP
+Visualize a FIFO fed by another program:
+.PP
+.RS 4
+zava \-\-method fifo \-\-source /tmp/music.fifo
+.RE
+.PP
+Emit raw data for another program to consume:
+.PP
+.RS 4
+zava \-\-output raw
+.RE
+.SH SEE ALSO
+.BR cava (1)
+.SH BUGS
+Report bugs at
+.IR https://github.com/<you>/zava/issues .
+.SH LICENSE
+MIT. See the LICENSE file shipped with the source.
