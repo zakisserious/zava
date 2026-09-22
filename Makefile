@@ -18,11 +18,12 @@ DOCDIR      ?= $(DATADIR)/doc/zava
 MANDIR      ?= $(DATADIR)/man
 
 CARGO       ?= cargo
+FEATURES    ?=
 INSTALL     ?= install
 VERSION     := $(shell sed -n 's/^version[[:space:]]*=[[:space:]]*"\(.*\)"/\1/p' Cargo.toml | head -n1)
 TARBALL     := zava-$(VERSION).tar.gz
 
-DIST_FILES  := Cargo.toml Cargo.lock src tests config zava.1 \
+DIST_FILES  := Cargo.toml Cargo.lock src tests config docs zava.1 \
                README.md LICENSE .gitignore
 
 .PHONY: all build release test fmt clippy check install uninstall dist clean
@@ -33,7 +34,7 @@ build:
 	$(CARGO) build
 
 release:
-	$(CARGO) build --release
+	$(CARGO) build --release $(FEATURES)
 
 test:
 	$(CARGO) test
