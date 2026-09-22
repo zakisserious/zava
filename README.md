@@ -42,6 +42,15 @@ No-root alternative: `make install PREFIX=~/.local` (needs `~/.local/bin` on
 your `PATH`). The repo also carries an Arch `PKGBUILD`, see
 [Installing](#installing).
 
+Watching it live beats reading about it. A 38-second capture of a small test
+track, retimed slightly for clarity:
+
+<video controls src="docs/media/zava-demo.mp4"></video>
+
+| 1 s | 12 s | 24 s | 36 s |
+|-----|------|------|------|
+| ![1 s](docs/media/frame-1s.jpg) | ![12 s](docs/media/frame-12s.jpg) | ![24 s](docs/media/frame-24s.jpg) | ![36 s](docs/media/frame-36s.jpg) |
+
 ---
 
 ## The 16-Visual Upgrade Pack
@@ -178,6 +187,23 @@ sudo pacman -S base-devel libpulse alsa-lib
 # Fedora
 sudo dnf install pulseaudio-libs-devel alsa-lib-devel
 ```
+
+macOS and Windows have no `parec`, so the capture backend is CPAL (disabled by
+default because it pulls in more crates). Build with the `cpal` feature:
+
+```bash
+# macOS — same command as Linux
+make install FEATURES=cpal
+zava --method cpal          # capture from the default input/loopback device
+
+# Windows — install MSVC toolchain + make (MSYS2, or winget install GNU.Make)
+make install FEATURES=cpal
+zava --method cpal
+```
+
+macOS: run in iTerm2 for full 24-bit color (Terminal.app doesn't set
+`COLORTERM=truecolor`). Windows: run in Windows Terminal; `SIGUSR1/2` don't
+exist there, so use the `r` / `c` keys, which work everywhere.
 
 ---
 
