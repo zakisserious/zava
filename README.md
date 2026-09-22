@@ -1,0 +1,311 @@
+# Zava
+
+**A console-based audio visualizer written in pure Rust — a loving tribute to [CAVA](https://github.com/karlstav/cava).**
+
+```
+      ██                 ▄▄▄
+   ██ ██  ██            ▄█ █▄      ██
+██ ██ ██  ██  ██  ██   ███ ███    ████
+█▇█▇█▇█▇▇█▇▇█▇▇█▇▇█▇▇████ ████▇▇▇█▇▇█
+```
+
+CAVA has been lighting up terminals for over a decade — a tiny C program that
+turns silence-still garden-variety terminals into dancing light shows. **Zava**
+is a pure-Rust interpretation of the same idea, built with huge respect for
+CAVA's design. It faithfully mirrors CAVA's DSP pipeline and config semantics
+so that anyone coming from CAVA feels immediately at home, then gently adds a
+few extra visual toys on top — a warm thank-you note rather than a rivalry.
+
+Where CAVA is lean and battle-tested C, Zava is memory-safe Rust with the same
+spirit: same glyphs, same feel, same obsession with making audio *visible*.
+
+---
+
+## Quick Start
+
+```bash
+git clone https://github.com/zakisserious/zava
+cd zava
+make install          # installs `zava` to /usr/local/bin
+zava                  # …that's it. It runs with ZERO configuration.
+```
+
+Done. PipeWire is auto-detected, the default sink monitor is captured, bars
+appear, and the beat responds — no config file required.
+
+To remove it completely:
+
+```bash
+make uninstall        # removes the binary, man page, and reference config
+```
+
+No-root alternative: `make install PREFIX=~/.local` (needs `~/.local/bin` on
+your `PATH`). And yes, the repo carries an Arch `PKGBUILD` too — see
+[Installing](#installing).
+
+---
+
+## The 16-Visual Upgrade Pack
+
+CAVA's core — gradient bars, smoothing, gravity — is all here, faithful to the
+original. On top of that faithful core, Zava's renderer layers sixteen
+extras, a few delighters the original never had. Every one is toggleable live
+from the in-terminal menu (press `m`), and each is a love letter to what CAVA
+already taught the world:
+
+| # | Visual | What it does | Config |
+|---|--------|--------------|--------|
+| 1 | **Bar reflection** | A dim, mirror-image strip beneath the bars (bottom orientation) | `bar_reflection` |
+| 2 | **Bright peaks** | Bars above the bright threshold render in accent ink, not the gradient | `bright_peaks` |
+| 3 | **Bar caps** | A solid bright cap sits on the top cell of each bar — crisp, readable tops | `bar_cap` |
+| 4 | **Beat pulse** | A split-second full-frame brightness flash synced to real bass hits | `beat_pulse` |
+| 5 | **Waveform oscilloscope** | A true line oscilloscope of the waveform (replaces bars) | `waveform` + `waveform_style = line\|filled\|area` |
+| 6 | **Waveform baseline** | A guide line beneath the oscilloscope trace | `waveform_baseline` |
+| 7 | **Waveform graticule** | Horizontal measure lines across the waveform area | `waveform_graticule` |
+| 8 | **Waveform dynamics** | Bass-reactive gain so the trace ducks with the kick | `waveform_dynamics` |
+| 9 | **Bar baseline rule** | A ruler-style scale line along the bottom of the bar block | `baseline_ruler` |
+| 10 | **Stereo divider** | A vertical pulse line between the two stereo halves | `stereo_divider` |
+| 11 | **ASCII fallback** | Pure-ASCII bar rendering (8-level `#` packing) when block glyphs are unavailable | `ascii_glyphs` |
+| 12 | **Background gradient** | A per-row color ramp behind the bars instead of one flat fill | `background_gradient` |
+| 13 | **Spectrum mode** | Hue-shifted spectrum coloring sweeping across the meter | `spectrum` |
+| 14 | **Accent ink** | Peaks + caps borrow your theme's accent… all orientations | `color.theme` |
+| 15 | **Reduced motion** | Disables per-frame brightness oscillation and pulse flashes | `reduce_motion` |
+| 16 | **Orientation parity** | Full glyph parity for `left` / `right` / `horizontal` / `top`, not just bottom | — |
+
+Every item is a boolean flag (`0`/`1`) or small value in `~/.config/zava/config`
+— or flip it live from the menu. Nothing here is forced on you.
+
+> ⚠️ Fake screenshots would be lame, so here's the live `--test` mode instead.
+> Run `zava --test` with zero playback required to see everything immediately:
+
+```
+Bars (bottom)          Waveform area            Mirror (horizontal)
+▇▇              ████        ╭──╮    ╭── ╮    ██        ██      ████████
+▇▇▇▇        ████  ████    ╱████╲╱██╲  ╲████╲  ██  ██    ██  ██  ████████
+▇▇▇▇▇▇  ████  ▇▇▇▇  ██  ────────────────  ╰─    ██████████    ███████  ██
+───────────────────────        ─────────────────  ████████  ████  ████████
+```
+
+---
+
+## Key Controls
+
+| Key | Action |
+|-----|--------|
+| <kbd>Up</kbd> / <kbd>Down</kbd> | Increase / decrease sensitivity (±15%) |
+| <kbd>Left</kbd> / <kbd>Right</kbd> | Decrease / increase bar count (auto-width aware) |
+| <kbd>o</kbd> | Cycle orientation: `bottom → top → left → right → horizontal` |
+| <kbd>f</kbd> / <kbd>b</kbd> | Cycle foreground / background color |
+| <kbd>m</kbd> | Open the interactive settings menu (Esc/<kbd>q</kbd> to exit) |
+| <kbd>r</kbd> | Reload full config live |
+| <kbd>c</kbd> | Reload color / theme only |
+| <kbd>q</kbd> / <kbd>Esc</kbd> / <kbd>Ctrl+C</kbd> | Quit (cleanly restores the terminal) |
+
+### Unix signals
+
+- `SIGUSR1` — full config reload (like <kbd>r</kbd>)
+- `SIGUSR2` — color/theme reload only (like <kbd>c</kbd>)
+- `SIGWINCH` — automatic terminal resize handling
+
+```bash
+pkill -USR1 zava   # reload config on all running instances
+```
+
+---
+
+## Why it exists
+
+[Acknowledgment to the original is due.](https://github.com/karlstav/cava)
+
+The original CAVA is a beloved, battle-hardened C program that defined what a
+console audio visualizer should be. Zava is a pure-Rust love letter to it: the
+same *behavior*, the same spirit, in a memory-safe language — and it ticks your
+break the way CAVA taught us to:
+
+- **Identical DSP.** The dual-buffer SIMD FFT, Hann windowing, barycentric →
+  logarithmic cutoff distribution, Monstercat smoothing and gravity physics are
+  faithful ports so nothing sounds or behaves differently from CAVA — verified
+  by a test suite ported from CAVA's own `cavacore_test.c` (frequency-peak bin
+  accuracy and smoothing output within `<0.5%` error).
+- **The same glyph set.** 8-level sub-character Unicode blocks
+  (`▁▂▃▄▅▆▇█`), the exact blocks CAVA made iconic, plus flicker-free terminal
+  synchronized updates and 24-bit TrueColor gradients.
+- **Audio integrations.** Low-latency PipeWire / PulseAudio capture, CPAL
+  cross-platform fallback, FIFO named-pipe input for player integration, plus a
+  built-in synthetic test signal so you can enjoy the meter even in silence.
+- **Config-isolated.** Zava reads `~/.config/zava/config`, *never* `cava/config`,
+  so you can run both side by side and it can never touch your existing CAVA
+  setup (it politely warns if it spots one).
+
+---
+
+## Installing
+
+### From this repo (fastest)
+
+```bash
+make install
+make install PREFIX=~/.local      # user-local, no root
+make uninstall                     # full removal
+```
+
+Installation places the binary in `PREFIX/bin`, the man page, and a reference
+config at `PREFIX/share/zava/config.example`.
+
+### Arch Linux (PKGBUILD)
+
+```bash
+make dist && makepkg -si
+```
+
+### Via cargo
+
+```bash
+cargo install --path .
+```
+
+> Note: for `cargo install --path .` there is no clean uninstall — the Makefile
+> (`make uninstall`) is the supported removal path.
+
+### Prerequisites
+
+- Rust 1.70+ (`rustc`, `cargo`)
+- Audio stack: PipeWire or PulseAudio
+- Dev headers for the capture backends:
+
+```bash
+# Debian / Ubuntu / Mint
+sudo apt-get install build-essential libpulse-dev libasound2-dev
+
+# Arch Linux
+sudo pacman -S base-devel libpulse alsa-lib
+
+# Fedora
+sudo dnf install pulseaudio-libs-devel alsa-lib-devel
+```
+
+---
+
+## Usage
+
+```bash
+zava                     # run with ~/.config/zava/config (auto-created defaults)
+zava --test              # built-in test music — no sound output needed
+zava -p /path/to/config  # custom config file
+zava --method fifo --source /tmp/mpd.fifo   # external player integration
+zava --output raw        # binary/ascii data stream (Waybar, Polybar, scripts)
+zava --generate-config   # write a config sample to ~/.config/zava/config and exit
+```
+
+| Flag | Description |
+|------|-------------|
+| `-p, --config <path>` | Custom config path |
+| `--test` | Internal harmonic test audio |
+| `--generate-config` | Write config and exit (`--force` to overwrite) |
+| `--method <m>` | `pipewire`, `pulse`, `alsa`, `fifo`, `cpal`, `test` |
+| `--source <dev>` | Device / monitor source |
+| `--output <m>` | `noncurses`, `ncurses`, or `raw` |
+| `--channels <m>` | `stereo` or `mono` |
+| `-v, --version` / `-h, --help` | Version / help |
+
+---
+
+## Configuration
+
+Zava reads a CAVA-style INI from `$XDG_CONFIG_HOME/zava/config` or
+`~/.config/zava/config`. Lookup order: explicit `-p` path → XDG → home.
+Every option has a sensible default, so **runs-with-zero-config is real** — the
+file only exists if you want to tune.
+
+A fully-commented template is shipped at `share/zava/config.example` and can be
+generated with `zava --generate-config`. The headline sections:
+
+```ini
+[general]
+framerate = 60
+autosens = 1
+sensitivity = 100
+bars = 0                    # 0 = auto-fit to terminal width
+bar_width = 2
+bar_spacing = 1
+lower_cutoff_freq = 50
+higher_cutoff_freq = 10000
+
+[input]
+method = pipewire           # pipewire | pulse | alsa | fifo | cpal | test
+
+[output]
+orientation = bottom        # bottom | top | left | right | horizontal
+channels = 2                # stereo draws TWO mirrored halves
+waveform = false            # oscilloscope instead of bars
+waveform_style = line       # line | filled | area
+stereo_divider = false      # visual divider between stereo halves
+xaxis = none
+
+[color]
+gradient = false
+gradient_count = 8
+gradient_color_1 = '#ff5555'
+gradient_color_8 = '#f1fa8c'
+foreground = '#ffffff'
+background = '#000000'
+spectrum = false            # hue-sweep spectrum coloring
+background_gradient = false # per-row background ramp
+
+[smoothing]
+monstercat = 0              # float > 0 = inter-bar smoothing (try 1.5-3.0)
+noise_reduction = 77
+gravity = 100
+
+[eq]
+# per-band LINEAR multipliers (CAVA semantics: 0.8 = -20%, 1.2 = +20%)
+1 = 0.8
+2 = 0.9
+3 = 1.0
+4 = 1.1
+5 = 1.2
+```
+
+All visual upgrades live under `[output]` and `[color]` (see the table above),
+each a trivial `0`/`1` — or toggle them interactively from the `m` menu.
+
+> **Tip:** with `bar_spacing = 0`, bars touch and the 1/8-row quantization shows
+> as a pixel staircase. Raising `monstercat` (e.g. `2.0`) bleeds each bar's peak
+> into its neighbours and turns the staircase into a smooth curve.
+
+---
+
+## Testing
+
+```bash
+cargo test
+```
+
+68 tests across the DSP, config, and renderer suites:
+
+- **DSP** (`tests/dsp_test.rs`) — port of CAVA's official simulation test,
+  asserting frequency-peak bin accuracy, integral smoothing, and Monstercat
+  calculations within `<0.5%`.
+- **Config** (`tests/config_test.rs`) — full INI parsing, gradients, equalizer
+  curves, and fallback defaults.
+- **Renderer** — waveform envelope band wrapping, divider layout, and color math.
+
+---
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---------|-----|
+| Bars don't move | Audio must actually be playing; on PipeWire the monitor suspends in silence. Zava captures the active default sink `.monitor` via `pactl`. |
+| Audio lags | Tighten the buffer: Zava requests low 20 ms latency; check your PipeWire buffer settings. |
+| Stale glyphs after resize | Press <kbd>r</kbd>; Zava also clears the frame on every layout recomputation. |
+| Weird glyphs in plain text terminals | Enable `ascii_glyphs = 1` and (if truly 8-bit) `data_format` raw output. |
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE).
+
+Thanks to Karl Stavestrand and everyone who kept CAVA alive for over a decade —
+Zava stands on your shoulders. ✊🕶️
