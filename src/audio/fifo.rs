@@ -19,10 +19,15 @@ impl FifoBackend {
     pub fn new(path: &str, sample_rate: u32, channels: u32, sample_bits: u32) -> Result<Self, String> {
         let p = Path::new(path);
         if !p.exists() {
-            let c_path = std::ffi::CString::new(path)
-                .map_err(|e| format!("Invalid FIFO path: {e}"))?;
-            unsafe {
-                libc::mkfifo(c_path.as_ptr(), 0o666);
+            // mkfifo only exists on unix; elsewhere named pipes are created by
+            // the shell or the writer, zava merely opens the path for reading.
+            #[cfg(unix)]
+            {
+                let c_path = std::ffi::CString::new(path)
+                    .map_err(|e| format!("Invalid FIFO path: {e}"))?;
+                unsafe {
+                    libc::mkfifo(c_path.as_ptr(), 0o666);
+                }
             }
         }
 

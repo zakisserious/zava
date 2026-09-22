@@ -4,13 +4,17 @@ use crossterm::execute;
 use crossterm::terminal::{
     disable_raw_mode, enable_raw_mode, Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen,
 };
+#[cfg(unix)]
 use signal_hook::consts::signal::{SIGINT, SIGTERM, SIGUSR1, SIGUSR2, SIGWINCH};
+#[cfg(unix)]
 use signal_hook::iterator::Signals;
 use std::io::{self, stdout, Write};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{channel, Receiver};
 use std::sync::Arc;
-use std::thread::{self, JoinHandle};
+use std::thread::JoinHandle;
+#[cfg(unix)]
+use std::thread;
 use std::time::Duration;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -49,44 +53,52 @@ impl TerminalGuard {
         out.flush()?;
 
         let (tx, rx) = channel();
+        #[cfg(not(unix))]
+        let _tx = tx; // channel sender is only used by the unix signal thread
         let running = Arc::new(AtomicBool::new(true));
-        let running_clone = running.clone();
 
-        // Spawn signal listener thread
-        let mut signals = Signals::new(&[SIGINT, SIGTERM, SIGWINCH, SIGUSR1, SIGUSR2])
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+        // Spawn signal listener thread (unix only; Windows crossterm events
+        // already cover quit + resize, and SIGUSR1/SIGUSR2 don't exist there).
+        #[cfg(unix)]
+        let signal_handle = Some({
+            let mut signals = Signals::new(&[SIGINT, SIGTERM, SIGWINCH, SIGUSR1, SIGUSR2])
+                .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
 
-        let tx_sig = tx.clone();
-        let signal_handle = thread::Builder::new()
-            .name("zava-signals".to_string())
-            .spawn(move || {
-                for sig in signals.forever() {
-                    if !running_clone.load(Ordering::Relaxed) {
-                        break;
-                    }
-                    match sig {
-                        SIGINT | SIGTERM => {
-                            let _ = tx_sig.send(ActionEvent::Quit);
+            let tx_sig = tx.clone();
+            let running_clone = running.clone();
+            thread::Builder::new()
+                .name("zava-signals".to_string())
+                .spawn(move || {
+                    for sig in signals.forever() {
+                        if !running_clone.load(Ordering::Relaxed) {
                             break;
                         }
-                        SIGWINCH => {
-                            let _ = tx_sig.send(ActionEvent::Resize);
+                        match sig {
+                            SIGINT | SIGTERM => {
+                                let _ = tx_sig.send(ActionEvent::Quit);
+                                break;
+                            }
+                            SIGWINCH => {
+                                let _ = tx_sig.send(ActionEvent::Resize);
+                            }
+                            SIGUSR1 => {
+                                let _ = tx_sig.send(ActionEvent::ReloadConfig);
+                            }
+                            SIGUSR2 => {
+                                let _ = tx_sig.send(ActionEvent::ReloadColors);
+                            }
+                            _ => {}
                         }
-                        SIGUSR1 => {
-                            let _ = tx_sig.send(ActionEvent::ReloadConfig);
-                        }
-                        SIGUSR2 => {
-                            let _ = tx_sig.send(ActionEvent::ReloadColors);
-                        }
-                        _ => {}
                     }
-                }
-            })?;
+                })?
+        });
+        #[cfg(not(unix))]
+        let signal_handle = None;
 
         Ok(Self {
             use_alternate_screen,
             active: true,
-            _signal_handle: Some(signal_handle),
+            _signal_handle: signal_handle,
             event_rx: rx,
             running,
         })
