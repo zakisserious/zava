@@ -39,10 +39,16 @@ No-root alternative: `make install PREFIX=~/.local` (needs `~/.local/bin` on
 your `PATH`). The repo also carries an Arch `PKGBUILD`, see
 [Installing](#installing).
 
-Watching it live beats reading about it. A 38-second capture of a small test
+---
+
+## Demo
+
+Watching it live beats reading about it — a 38-second capture of a small test
 track, retimed slightly for clarity:
 
-<video controls src="docs/media/zava-demo.mp4"></video>
+<video controls width="100%" src="docs/media/zava-demo.mp4"></video>
+
+[watch in browser — docs/media/zava-demo.mp4](docs/media/zava-demo.mp4)
 
 | 1 s | 12 s | 24 s | 36 s |
 |-----|------|------|------|
