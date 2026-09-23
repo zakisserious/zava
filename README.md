@@ -2,12 +2,9 @@
 
 **A console-based audio visualizer written in pure Rust, in the spirit of [CAVA](https://github.com/karlstav/cava).**
 
-```
-      ██                 ▄▄▄
-   ██ ██  ██            ▄█ █▄      ██
-██ ██ ██  ██  ██  ██   ███ ███    ████
-█▇█▇█▇█▇▇█▇▇█▇▇█▇▇█▇▇████ ████▇▇▇█▇▇█
-```
+<p align="center">
+  <img src="docs/media/shot-hero.jpg" width="760" alt="Zava bars responding to music in a terminal">
+</p>
 
 CAVA has been putting dancing bars in terminals for over a decade. Zava is my
 Rust take on the same idea: the same DSP shape and config style, the same eight
@@ -81,16 +78,12 @@ in-terminal menu (press `m`):
 Each one is a `0`/`1` flag or a small value in `~/.config/zava/config`. Everything
 defaults to off or conservative; you opt in.
 
-> ⚠️ Fake screenshots would be lame, so here's the live `--test` mode instead.
-> Run `zava --test` with zero playback to see it all immediately:
+> ⚠️ Fake screenshots would be lame, so these are real captures of the live
+> `--test` mode. Run `zava --test` with zero playback to see it all immediately:
 
-```
-Bars (bottom)          Waveform area            Mirror (horizontal)
-▇▇              ████        ╭──╮    ╭── ╮    ██        ██      ████████
-▇▇▇▇        ████  ████    ╱████╲╱██╲  ╲████╲  ██  ██    ██  ██  ████████
-▇▇▇▇▇▇  ████  ▇▇▇▇  ██  ────────────────  ╰─    ██████████    ███████  ██
-───────────────────────        ─────────────────  ████████  ████  ████████
-```
+| Bars (bottom) | Waveform | Mirror (horizontal) |
+|---|---|---|
+| ![Bars bottom mode](docs/media/shot-bars.png) | ![Waveform mode](docs/media/shot-wave.png) | ![Horizontal mirror mode](docs/media/shot-mirror.png) |
 
 ---
 
