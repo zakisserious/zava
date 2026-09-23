@@ -46,9 +46,10 @@ your `PATH`). The repo also carries an Arch `PKGBUILD`, see
 Watching it live beats reading about it — a 38-second capture of a small test
 track, retimed slightly for clarity:
 
-<video controls width="100%" src="docs/media/zava-demo.mp4"></video>
 
-[watch in browser — docs/media/zava-demo.mp4](docs/media/zava-demo.mp4)
+https://github.com/user-attachments/assets/a524956e-9a95-401c-b36d-913446053ecc
+
+
 
 | 1 s | 12 s | 24 s | 36 s |
 |-----|------|------|------|
